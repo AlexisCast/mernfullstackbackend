@@ -1,4 +1,5 @@
 const { v4: uuidv4 } = require("uuid");
+const { validationResult } = require("express-validator");
 
 const HttpError = require("../models/http-error");
 
@@ -11,7 +12,7 @@ let DUMMY_PLACES = [
 			lat: 40.7484474,
 			lng: -73.9871516,
 		},
-		addres: "20 W 34th St. New York, NY 10001",
+		address: "20 W 34th St. New York, NY 10001",
 		creator: "u1",
 	},
 ];
@@ -35,7 +36,7 @@ const getPlacesByUserId = (req, res, next) => {
 	const places = DUMMY_PLACES.filter((p) => {
 		return p.creator === userId;
 	});
-	if (!places||places.length===0) {
+	if (!places || places.length === 0) {
 		return next(
 			new HttpError(
 				"Could not find places for the provided user id.",
@@ -48,13 +49,22 @@ const getPlacesByUserId = (req, res, next) => {
 };
 
 const createPlace = (req, res, next) => {
-	const { title, description, coordinates, addres, creator } = req.body;
+	const errors = validationResult(req);
+	if (!errors.isEmpty()) {
+		console.log("errors", errors);
+		throw new HttpError(
+			"Invalid inputs passed, please check your data.",
+			422
+		);
+	}
+
+	const { title, description, coordinates, address, creator } = req.body;
 	const createPlace = {
 		id: uuidv4(),
 		title,
 		description,
 		location: coordinates,
-		addres,
+		address,
 		creator,
 	};
 	DUMMY_PLACES.push(createPlace);
@@ -62,6 +72,14 @@ const createPlace = (req, res, next) => {
 };
 
 const updatePlace = (req, res, next) => {
+	const errors = validationResult(req);
+	if (!errors.isEmpty()) {
+		throw new HttpError(
+			"Invalid inputs passed, please check your data.",
+			422
+		);
+	}
+
 	const { title, description } = req.body;
 	const placeId = req.params.pid;
 
@@ -77,8 +95,11 @@ const updatePlace = (req, res, next) => {
 
 const deletePlace = (req, res, next) => {
 	const placeId = req.params.pid;
+	if (!DUMMY_PLACES.find((p) => p.id === placeId)) {
+		throw new HttpError("Could not find a place for that id.", 404);
+	}
 	DUMMY_PLACES = DUMMY_PLACES.filter((p) => p.id !== placeId);
-	res.status(200).json({ message: "Delete place." });
+	res.status(200).json({ message: "Deleted place." });
 };
 
 exports.getPlaceById = getPlaceById;
