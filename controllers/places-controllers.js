@@ -1,4 +1,4 @@
-const { v4: uuidv4 } = require('uuid');
+const { v4: uuidv4 } = require("uuid");
 
 const HttpError = require("../models/http-error");
 
@@ -61,6 +61,24 @@ const createPlace = (req, res, next) => {
 	res.status(201).json({ place: createPlace });
 };
 
+const updatePlace = (req, res, next) => {
+	const { title, description } = req.body;
+	const placeId = req.params.pid;
+
+	const updatePlace = { ...DUMMY_PLACES.find((p) => p.id === placeId) };
+	const placeIndex = DUMMY_PLACES.findIndex((p) => p.id === placeId);
+	updatePlace.title = title;
+	updatePlace.description = description;
+
+	DUMMY_PLACES[placeIndex] = updatePlace;
+
+	res.status(200).json({ place: updatePlace });
+};
+
+const deletePlace = (req, res, next) => {};
+
 exports.getPlaceById = getPlaceById;
 exports.getPlaceByUserId = getPlaceByUserId;
 exports.createPlace = createPlace;
+exports.updatePlace = updatePlace;
+exports.deletePlace = deletePlace;
