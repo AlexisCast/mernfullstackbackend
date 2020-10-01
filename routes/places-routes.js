@@ -5,6 +5,8 @@ const placesControllers = require("../controllers/places-controllers");
 
 const router = express.Router();
 
+router.get("/", placesControllers.getPlaces);
+
 //http://localhost:5000/api/places/p1
 router.get("/:pid", placesControllers.getPlaceById);
 
