@@ -3,6 +3,7 @@ const { validationResult } = require("express-validator");
 
 const HttpError = require("../models/http-error");
 const getCoordsForAddress = require("../util/location");
+const Place = require("../models/place");
 
 let DUMMY_PLACES = [
 	{
@@ -22,17 +23,29 @@ const getPlaces = (req, res, next) => {
 	res.json({ users: DUMMY_PLACES });
 };
 
-const getPlaceById = (req, res, next) => {
+const getPlaceById = async (req, res, next) => {
 	console.log("GET request in Places");
 	const placeId = req.params.pid;
-	const place = DUMMY_PLACES.find((p) => {
-		return p.id === placeId;
-	});
+
+	let place;
+	try {
+		place = await Place.findById(placeId).exec();
+	} catch (err) {
+		const error = new HttpError(
+			"Something went wrong, could not find a place",
+			500
+		);
+		return next(error);
+	}
 
 	if (!place) {
-		throw new HttpError("Could not find a place for the provided id.", 404);
+		const error = new HttpError(
+			"Could not find a place for the provided id.",
+			404
+		);
+		next(error);
 	}
-	res.json({ place: place });
+	res.json({ place: place.toObject({ getters: true }) });
 };
 
 const getPlacesByUserId = (req, res, next) => {
@@ -63,7 +76,7 @@ const createPlace = async (req, res, next) => {
 	}
 
 	const { title, description, address, creator } = req.body;
-	
+
 	let coordinates;
 	try {
 		coordinates = await getCoordsForAddress(address);
@@ -71,15 +84,25 @@ const createPlace = async (req, res, next) => {
 		return next(error);
 	}
 
-	const createPlace = {
-		id: uuidv4(),
+	const createPlace = new Place({
 		title,
 		description,
-		location: coordinates,
 		address,
+		location: coordinates,
+		image:
+			"https://upload.wikimedia.org/wikipedia/commons/thumb/1/10/Empire_State_Building_%28aerial_view%29.jpg/400px-Empire_State_Building_%28aerial_view%29.jpg",
 		creator,
-	};
-	DUMMY_PLACES.push(createPlace);
+	});
+	try {
+		await createPlace.save();
+		// DUMMY_PLACES.push(createPlace);
+	} catch (err) {
+		const error = new HttpError(
+			"Creating place failed, please try again.",
+			500
+		);
+	}
+
 	res.status(201).json({ place: createPlace });
 };
 
