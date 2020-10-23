@@ -28,7 +28,8 @@ async function getCoordsForAddress(address) {
 	}
 
 	console.log(data);
-	const coordinates = data.results[0].geometry.location;
+	// const coordinates = data.results[0].geometry.location;
+	const coordinates = {lat:40,lng:45};
 
 	return coordinates;
 }

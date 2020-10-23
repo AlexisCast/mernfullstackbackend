@@ -35,5 +35,6 @@ mongoose
 		app.listen(5000);
 	})
 	.catch((err) => {
-		console.log(err);
+		// console.log(err);
+		console.log("Not Connected to Database ERROR! ", err);
 	});
