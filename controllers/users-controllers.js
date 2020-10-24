@@ -15,7 +15,7 @@ const getUsers = async (req, res, next) => {
 		);
 		return next(error);
 	}
-	res.json({ users: users.map(user => user.toObject({ getters: true })) });
+	res.json({ users: users.map((user) => user.toObject({ getters: true })) });
 };
 
 const signup = async (req, res, next) => {
@@ -53,7 +53,7 @@ const signup = async (req, res, next) => {
 		image:
 			"https://live.staticflickr.com/7631/26849088292_36fc52ee90_b.jpg",
 		password,
-		places:[],
+		places: [],
 	});
 
 	try {
@@ -73,10 +73,10 @@ const login = async (req, res, next) => {
 	let existingUser;
 
 	try {
-		existingUser = await User.findOne({ email: email }).exec();
+		existingUser = await User.findOne({ email: email });
 	} catch (err) {
 		const error = new HttpError(
-			"Logging in failed, please try again later",
+			"Loggin in failed, please try again later.",
 			500
 		);
 		return next(error);
@@ -84,11 +84,12 @@ const login = async (req, res, next) => {
 
 	if (!existingUser || existingUser.password !== password) {
 		const error = new HttpError(
-			"Invalid credenctials, could not log you in",
+			"Invalid credentials, could not log you in.",
 			401
 		);
 		return next(error);
 	}
+
 	res.json({ message: "Logged in!" });
 };
 
