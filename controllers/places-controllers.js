@@ -7,8 +7,19 @@ const getCoordsForAddress = require("../util/location");
 const Place = require("../models/place");
 const User = require("../models/user");
 
-const getPlaces = (req, res, next) => {
-	res.json({ users: DUMMY_PLACES });
+const getPlaces = async (req, res, next) => {
+	// res.json({ users: DUMMY_PLACES });
+	let places;
+	try {
+		places = await Place.find({});
+	} catch (err) {
+		const error = new HttpError(
+			"Fetching places failed, please try again later.",
+			500
+		);
+		return next(error);
+	}
+	res.json({ places: places.map((user) => user.toObject({ getters: true })) });
 };
 
 const getPlaceById = async (req, res, next) => {
@@ -102,6 +113,7 @@ const createPlace = async (req, res, next) => {
 
 	try {
 		user = await User.findById(creator);
+		console.log("user:", user);
 	} catch (err) {
 		const error = HttpError("Creating place failed, please try again", 500);
 		return next(error);
@@ -184,6 +196,7 @@ const deletePlace = async (req, res, next) => {
 		return next(error);
 	}
 
+	console.log("place_: ", place);
 	try {
 		const sess = await mongoose.startSession();
 		sess.startTransaction();
