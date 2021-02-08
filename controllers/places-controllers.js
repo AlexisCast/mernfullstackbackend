@@ -1,3 +1,5 @@
+const fs = require("fs");
+
 const { v4: uuidv4 } = require("uuid");
 const { validationResult } = require("express-validator");
 const mongoose = require("mongoose");
@@ -19,7 +21,9 @@ const getPlaces = async (req, res, next) => {
 		);
 		return next(error);
 	}
-	res.json({ places: places.map((user) => user.toObject({ getters: true })) });
+	res.json({
+		places: places.map((user) => user.toObject({ getters: true })),
+	});
 };
 
 const getPlaceById = async (req, res, next) => {
@@ -104,8 +108,7 @@ const createPlace = async (req, res, next) => {
 		description,
 		address,
 		location: coordinates,
-		image:
-			req.file.path,
+		image: req.file.path,
 		creator,
 	});
 
@@ -196,6 +199,8 @@ const deletePlace = async (req, res, next) => {
 		return next(error);
 	}
 
+	const imagePath = place.image;
+
 	console.log("place_: ", place);
 	try {
 		const sess = await mongoose.startSession();
@@ -211,6 +216,10 @@ const deletePlace = async (req, res, next) => {
 		);
 		return next(error);
 	}
+
+	fs.unlink(imagePath, (err) => {
+		console.log("err imagePath", err);
+	});
 
 	res.status(200).json({ message: "Deleted place." });
 };
