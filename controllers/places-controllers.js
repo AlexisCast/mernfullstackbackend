@@ -88,7 +88,6 @@ const getPlacesByUserId = async (req, res, next) => {
 const createPlace = async (req, res, next) => {
 	const errors = validationResult(req);
 	if (!errors.isEmpty()) {
-		console.log("errors", errors);
 		return next(
 			new HttpError("Invalid inputs passed, please check your data.", 422)
 		);
@@ -113,19 +112,26 @@ const createPlace = async (req, res, next) => {
 	});
 
 	let user;
-
 	try {
 		user = await User.findById(creator);
-		console.log("user:", user);
 	} catch (err) {
-		const error = HttpError("Creating place failed, please try again", 500);
+		const error = new HttpError(
+			"Creating place failed, please try again.",
+			500
+		);
 		return next(error);
 	}
+
 	if (!user) {
-		const error = new HttpError("Could not find user for provided id", 400);
+		const error = new HttpError(
+			"Could not find user for provided id.",
+			404
+		);
 		return next(error);
 	}
-	console.log("user", user);
+
+	console.log(user);
+
 	try {
 		const sess = await mongoose.startSession();
 		sess.startTransaction();
@@ -138,6 +144,7 @@ const createPlace = async (req, res, next) => {
 			"Creating place failed, please try again.",
 			500
 		);
+		return next(error);
 	}
 
 	res.status(201).json({ place: createdPlace });
@@ -161,6 +168,15 @@ const updatePlace = async (req, res, next) => {
 		const error = new HttpError(
 			"Something went wrong, could not update place.",
 			500
+		);
+		return next(error);
+	}
+
+	//this is to avoid editing other user places
+	if (place.creator.toString() !== req.userData.userId) {
+		const error = new HttpError(
+			"You are not allow to edit this place.",
+			401
 		);
 		return next(error);
 	}
@@ -196,6 +212,14 @@ const deletePlace = async (req, res, next) => {
 
 	if (!place) {
 		const error = new HttpError("Could not find place for this id.", 404);
+		return next(error);
+	}
+
+	if (place.creator.id !== req.userData.userId) {
+		const error = new HttpError(
+			"You are not allow to delete this place.",
+			401
+		);
 		return next(error);
 	}
 
